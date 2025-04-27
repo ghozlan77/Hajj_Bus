@@ -8,13 +8,13 @@ exports.getAllRequests = async (req, res) => {
       status: "success",
       results: requests.length,
       data: { 
-        requests
-     }
+        requests,
+     },
     });
   } catch (err) {
     res.status(404).json({
          status: "fail",
-          message: err
+          message: err,
          });
   }
 };
@@ -25,13 +25,13 @@ exports.getRequest = async (req, res) => {
     res.status(200).json({
       status: "success",
       data: { 
-        request
+        request,
      }
     });
   } catch (err) {
     res.status(404).json({
          status: "fail",
-          message: err 
+          message: err ,
         });
   }
 };
@@ -42,13 +42,13 @@ exports.createRequest = async (req, res) => {
     res.status(201).json({
       status: "success",
       data: { 
-        request: newRequest
+        request: newRequest,
      }
     });
   } catch (err) {
     res.status(400).json({ 
         status: "fail",
-         message: err
+         message: err,
          });
   }
 };
@@ -58,12 +58,12 @@ exports.deleteRequest = async (req, res) => {
     await HajjRequest.findByIdAndDelete(req.params.id);
     res.status(204).json({ 
         status: "success",
-         data: null
+         data: null,
          });
   } catch (err) {
     res.status(404).json({ 
         status: "fail",
-         message: err
+         message: err,
          });
   }
 };
@@ -77,18 +77,18 @@ exports.assignNearestBus = async (req, res) => {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates
+            coordinates,
           },
-          $maxDistance: 10000
+          $maxDistance: 10000,
         }
       },
-      available: true
+      available: true,
     });
 
     if (!nearestBus) {
       return res.status(404).json({ 
         status: "fail",
-         message: "No available buses nearby"
+         message: "No available buses nearby",
          });
     }
 
@@ -96,7 +96,7 @@ exports.assignNearestBus = async (req, res) => {
       userId,
       coordinates,
       busId: nearestBus._id,
-      status: "assigned"
+      status: "assigned",
     });
 
     nearestBus.available = false;
@@ -104,12 +104,12 @@ exports.assignNearestBus = async (req, res) => {
 
     res.status(201).json({
        status: "success",
-        data: { request }
+        data: { request },
        });
   } catch (err) {
     res.status(400).json({ 
       status: "fail",
-       message: err 
+       message: err ,
       });
   }
 };

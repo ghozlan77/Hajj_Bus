@@ -32,7 +32,6 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// تفعيل إندكس جغرافي عشان تستخدم $near وغيره
 userSchema.index({ location: "2dsphere" });
 
 const User = mongoose.model("User", userSchema);

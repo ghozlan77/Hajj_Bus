@@ -1,18 +1,11 @@
 const dotenv = require('dotenv');
-const morgan = require('morgan');
+dotenv.config({ path: './config.env' });
 
+const app = require('./app');
 
-
-mongoose
-.connect(process.env.DB_URI)
-.then((conn) => {
-  console.log(`Database Connected: ${conn.connection.host}`);
-})
-.catch((err) => {
-  console.error(`Database Error: ${err}`);
-  process.exit(1);
+mongoose.connect(process.env.DB_URI).then((conn) => {
+  console.log(`Database Connected`);
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

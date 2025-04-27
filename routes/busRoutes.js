@@ -1,18 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const busController = require("../controllers/busController");
+const userController = require("../controllers/userController");
 
+router.route("/")
+  .get(userController.getAllUsers)
+  .post(userController.createUser);
 
-router.route('/')
-  .get(busController.getAllBuses)
-  .post(busController.createBus);
-
-router.route('/:id')
-  .get(busController.getBus)
-  .patch( busController.updateBus)
-  .delete( busController.deleteBus);
-
-
-
+router.route("/:id")
+  .get(userController.getUser)
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
 
 module.exports = router;
