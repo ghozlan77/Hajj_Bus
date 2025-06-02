@@ -1,85 +1,81 @@
-const User = require("../models/User");
+const User = require('../models/UserModel');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-exports.getAllUsers = async (req, res) => {
+const register = async (req, res) => {
   try {
-    const users = await User.find();
-    res.status(200).json({ 
-        status: "success",
-         results: users.length, 
-         data: { users } ,
-        });
-  } catch (err) {
-    res.status(500).json({
-         status: "fail",
-          message: err,
-        });
-  }
-};
+    const { name, email, password, role } = req.body;
+    const exists = await User.findOne({ email });
+    if (exists) {
+      return res.status(400).json({
+        msg: 'User already exists',
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-exports.getUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ 
-        status: "fail",
-         message: "User not found",
-         });
-
-    res.status(200).json({
-         status: "success", 
-         data: { user }
-         });
-  } catch (err) {
-    res.status(500).json({
-         status: "fail",
-          message: err,
-         });
-  }
-};
-
-exports.createUser = async (req, res) => {
-  try {
-    const newUser = await User.create(req.body);
-    res.status(201).json({ 
-        status: "success",
-         data: { user: newUser } ,
-        });
-  } catch (err) {
-    res.status(400).json({
-         status: "fail",
-          message: err,
-         });
-  }
-};
-
-exports.updateUser = async (req, res) => {
-  try {
-    const updated = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
     });
-    res.status(200).json({ 
-        status: "success",
-         data: { user: updated } ,
-        });
-  } catch (err) {
-    res.status(400).json({ 
-        status: "fail",
-         message: err.message ,
-        });
-  }
-};
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+    );
 
-exports.deleteUser = async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.status(204).json({
-         status: "success",
-          data: null ,
-        });
+    res.status(201).json({
+      user,
+      token,
+    });
   } catch (err) {
-    res.status(500).json({ 
-        status: "fail", 
-        message: err.message ,
+    res.status(500).json({
+      error: err.message,
     });
   }
 };
+
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).json({
+        msg: 'Invalid credentials',
+      });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(400).json({
+        msg: 'Invalid credentials',
+      });
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+    );
+
+    res.json({ user, token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
+
+module.exports = { register, login, getProfile };

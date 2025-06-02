@@ -1,17 +1,39 @@
 const express = require('express');
-const router = express.Router();
 const hajjRequestController = require('../controllers/hajjRequestController');
+const authController = require('../controllers/authController');
 
-router.post('/assign', hajjRequestController.assignNearestBus);
+const router = express.Router();
+
+// Protect all routes after this middleware
+router.use(authController.protect);
 
 router
   .route('/')
-  .get(hajjRequestController.getAllRequests)
+  .get(
+    authController.restrictTo('admin', 'supervisor'),
+    hajjRequestController.getAllRequests,
+  )
   .post(hajjRequestController.createRequest);
 
 router
   .route('/:id')
   .get(hajjRequestController.getRequest)
-  .delete(hajjRequestController.deleteRequest);
+  .patch(
+    authController.restrictTo('admin', 'supervisor'),
+    hajjRequestController.updateRequest,
+  )
+  .delete(
+    authController.restrictTo('admin'),
+    hajjRequestController.deleteRequest,
+  );
+
+router.post(
+  '/assign',
+  authController.restrictTo('admin', 'supervisor'),
+  hajjRequestController.assignNearestBus,
+);
+
+router.get('/pending', hajjRequestController.getPendingRequests);
+router.get('/completed', hajjRequestController.getCompletedRequests);
 
 module.exports = router;

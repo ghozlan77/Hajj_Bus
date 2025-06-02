@@ -1,14 +1,38 @@
-const express = require("express");
+const express = require('express');
+const busController = require('../controllers/busController');
+const authController = require('../controllers/authController');
+
 const router = express.Router();
-const userController = require("../controllers/userController");
 
-router.route("/")
-  .get(userController.getAllUsers)
-  .post(userController.createUser);
+// Protect all routes after this middleware
+router.use(authController.protect);
 
-router.route("/:id")
-  .get(userController.getUser)
-  .patch(userController.updateUser)
-  .delete(userController.deleteUser);
+router
+  .route('/')
+  .get(busController.getAllBuses)
+  .post(
+    authController.restrictTo('admin', 'supervisor'),
+    busController.createBus,
+  );
+
+router
+  .route('/:id')
+  .get(busController.getBus)
+  .patch(
+    authController.restrictTo('admin', 'supervisor'),
+    busController.updateBus,
+  )
+  .delete(authController.restrictTo('admin'), busController.deleteBus);
+
+router
+  .route('/:id/status')
+  .patch(
+    authController.restrictTo('admin', 'supervisor', 'driver'),
+    busController.updateBusStatus,
+  );
+
+router.get('/available', busController.getAvailableBuses);
+router.get('/maintenance', busController.getBusesInMaintenance);
+router.get('/active', busController.getActiveBuses);
 
 module.exports = router;
